@@ -3,7 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/habit.dart';
 import '../widgets/habit_tile.dart';
 import 'add_habit_screen.dart';
-import 'stats_screen.dart'; // Added the import for the stats screen
+import 'stats_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,23 +12,47 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final box = Hive.box<Habit>('habits');
 
-    return SafeArea(
+    // Wrap the Scaffold in a gradient container
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF8A2387), // Deep Purple
+            Color(0xFFE94057), // Vibrant Pink
+            Color(0xFFF27121), // Sunset Orange
+          ],
+        ),
+      ),
       child: Scaffold(
+        backgroundColor: Colors.transparent, // Crucial for showing the gradient!
+        
         appBar: AppBar(
-          title: const Text("Habit Tracker"),
+          title: const Text(
+            "Habit Tracker",
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900, // Extra bold
+              color: Colors.white,
+              letterSpacing: 2,
+              // --- 3D TEXT EFFECT ---
+              shadows: [
+                Shadow(color: Colors.black45, offset: Offset(2, 2), blurRadius: 0),
+                Shadow(color: Colors.black26, offset: Offset(4, 4), blurRadius: 0),
+              ],
+            ),
+          ),
           centerTitle: true,
-          // --- ADDED THE STATS BUTTON HERE ---
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           actions: [
             IconButton(
-              icon: const Icon(Icons.bar_chart),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const StatsScreen(),
-                  ),
-                );
-              },
+              icon: const Icon(Icons.bar_chart, size: 30),
+              onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const StatsScreen()),
+              ),
             )
           ],
         ),
@@ -36,10 +60,19 @@ class HomeScreen extends StatelessWidget {
         body: ValueListenableBuilder(
           valueListenable: box.listenable(),
           builder: (context, Box<Habit> box, _) {
-            
             if (box.isEmpty) {
               return const Center(
-                child: Text("Add your first habit"),
+                child: Text(
+                  "Add your first habit",
+                  style: TextStyle(
+                    color: Colors.white, 
+                    fontSize: 22, 
+                    fontWeight: FontWeight.w900,
+                    shadows: [
+                      Shadow(color: Colors.black38, offset: Offset(2, 2), blurRadius: 0),
+                    ]
+                  ),
+                ),
               );
             }
 
@@ -47,8 +80,6 @@ class HomeScreen extends StatelessWidget {
               itemCount: box.length,
               itemBuilder: (context, index) {
                 final habit = box.getAt(index)!;
-
-                // 1. Check if today's date exists in the completedDays list
                 final today = DateTime.now();
                 bool isCompletedToday = habit.completedDays.any((date) =>
                     date.year == today.year &&
@@ -57,12 +88,9 @@ class HomeScreen extends StatelessWidget {
 
                 return HabitTile(
                   habit: habit,
-                  isCompleted: isCompletedToday, 
-                  onDelete: () {
-                    habit.delete();
-                  },
+                  isCompleted: isCompletedToday,
+                  onDelete: () => habit.delete(),
                   onChanged: (value) {
-                    // 2. Add or remove today's date based on the checkbox
                     if (value == true) {
                       habit.completedDays.add(today);
                     } else {
@@ -71,7 +99,7 @@ class HomeScreen extends StatelessWidget {
                           date.month == today.month &&
                           date.day == today.day);
                     }
-                    habit.save(); 
+                    habit.save();
                   },
                 );
               },
@@ -79,7 +107,14 @@ class HomeScreen extends StatelessWidget {
           },
         ),
 
+        // Glassmorphism Floating Action Button
         floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.white.withOpacity(0.3),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.white.withOpacity(0.5)),
+          ),
           onPressed: () {
             Navigator.push(
               context,
@@ -88,7 +123,7 @@ class HomeScreen extends StatelessWidget {
               ),
             );
           },
-          child: const Icon(Icons.add),
+          child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
     );
