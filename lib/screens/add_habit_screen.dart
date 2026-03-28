@@ -19,7 +19,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     final box = Hive.box<Habit>('habits');
 
     box.add(
-      Habit(name: controller.text),
+      Habit(
+        id: DateTime.now().millisecondsSinceEpoch.toString(), // Unique ID
+        name: controller.text,
+        createdAt: DateTime.now(),
+        completedDays: [], // Starts with no completed days
+      ),
     );
 
     Navigator.pop(context);
