@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/habit_provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/habit.dart';
+import '../widgets/habit_tile.dart';
 import 'add_habit_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -8,60 +9,59 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final box = Hive.box<Habit>('habits');
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Habit Tracker"),
-      ),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Habit Tracker"),
+          centerTitle: true,
+        ),
 
-      body: Consumer<HabitProvider>(
-        builder: (context, provider, child) {
+        body: ValueListenableBuilder(
+          valueListenable: box.listenable(),
+          builder: (context, Box<Habit> box, _) {
 
-          final habits = provider.habits;
-
-          if (habits.isEmpty) {
-            return const Center(
-              child: Text("No habits yet"),
-            );
-          }
-
-          return ListView.builder(
-            itemCount: habits.length,
-            itemBuilder: (context, index) {
-
-              final habit = habits[index];
-
-              bool completedToday =
-                  habit.completedDays.any(
-                (d) => provider.isSameDay(
-                    d, DateTime.now()),
+            if (box.isEmpty) {
+              return const Center(
+                child: Text("Add your first habit"),
               );
+            }
 
-              return ListTile(
-                title: Text(habit.name),
+            return ListView.builder(
+              itemCount: box.length,
+              itemBuilder: (context, index) {
 
-                trailing: Checkbox(
-                  value: completedToday,
-                  onChanged: (_) {
-                    provider.toggleHabit(habit);
+                final habit = box.getAt(index)!;
+
+                return HabitTile(
+                  habit: habit,
+
+                  onDelete: () {
+                    habit.delete();
                   },
-                ),
-              );
-            },
-          );
-        },
-      ),
 
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const AddHabitScreen(),
-            ),
-          );
-        },
+                  onChanged: (value) {
+                    habit.isCompleted = value!;
+                    habit.save();
+                  },
+                );
+              },
+            );
+          },
+        ),
+
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AddHabitScreen(),
+              ),
+            );
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import '../models/habit.dart';
 
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -10,6 +12,18 @@ class AddHabitScreen extends StatefulWidget {
 class _AddHabitScreenState extends State<AddHabitScreen> {
 
   final TextEditingController controller = TextEditingController();
+
+  void saveHabit() {
+    if (controller.text.isEmpty) return;
+
+    final box = Hive.box<Habit>('habits');
+
+    box.add(
+      Habit(name: controller.text),
+    );
+
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +41,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 labelText: "Habit Name",
               ),
             ),
-
             const SizedBox(height: 20),
 
             ElevatedButton(
-              onPressed: () {
-                // logic will be added later
-              },
+              onPressed: saveHabit,
               child: const Text("Save Habit"),
             )
           ],
