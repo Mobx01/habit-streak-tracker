@@ -20,6 +20,7 @@ dependencies:
   fl_chart: ^1.2.0
   uuid: ^4.4.0
   confetti: ^0.8.0
+  flutter_local_notifications: ^20.1.0
 
 dev_dependencies:
   flutter_test:

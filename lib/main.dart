@@ -3,44 +3,24 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:google_fonts/google_fonts.dart'; 
 import 'models/habit.dart';
 import 'screens/splash_screen.dart';
+import 'services/notification_service.dart'; // <-- NOTIFICATION IMPORT
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  try {
-    await Hive.initFlutter();
-    
-    if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(HabitAdapter());
-    }
-    
-    
-    // Now it creates a fresh, clean database for Phase 11.8
-    await Hive.openBox<Habit>('habits');
-    
-    runApp(const MyApp());
-    
-  } catch (e, stacktrace) {
-    print("FATAL ERROR: $e");
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          backgroundColor: Colors.white,
-          body: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Center(
-              child: SingleChildScrollView(
-                child: Text(
-                  '🚨 APP CRASHED ON STARTUP 🚨\n\nERROR:\n$e\n\nSTACKTRACE:\n$stacktrace',
-                  style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  // --- INITIALIZE NOTIFICATIONS BEFORE APP STARTS ---
+  await NotificationService().init(); 
+  
+  await Hive.initFlutter();
+  
+  if (!Hive.isAdapterRegistered(0)) {
+    Hive.registerAdapter(HabitAdapter());
   }
+  
+  await Hive.openBox<Habit>('habits');
+  await Hive.openBox('settings'); 
+  
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -48,20 +28,36 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Habit Streak',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF38BDF8),
-          brightness: Brightness.dark,
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(
-          ThemeData.dark().textTheme,
-        ),
-      ),
-      home: const SplashScreen(),
+    // Listen to the settings box for theme changes
+    return ValueListenableBuilder(
+      valueListenable: Hive.box('settings').listenable(),
+      builder: (context, box, _) {
+        bool isDarkMode = box.get('isDarkMode', defaultValue: true);
+
+        return MaterialApp(
+          title: 'Habit Streak',
+          debugShowCheckedModeBanner: false,
+          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          
+          // --- LIGHT THEME ---
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            colorSchemeSeed: const Color(0xFF38BDF8),
+            textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
+          ),
+          
+          // --- DARK THEME ---
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorSchemeSeed: const Color(0xFF38BDF8),
+            textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+          ),
+          
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

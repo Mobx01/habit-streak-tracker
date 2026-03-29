@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/habit.dart';
+import '../services/notification_service.dart'; 
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -17,27 +18,29 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box<Habit>('habits');
+    // Check current theme
+    bool isDark = Theme.of(context).brightness == Brightness.dark;
+    Color textColor = isDark ? Colors.white : Colors.black87;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F2027), 
-            Color(0xFF203A43), 
-            Color(0xFF2C5364)
-          ], // Sleek Dark Theme from 11.7
+          // --- DYNAMIC GRADIENT ---
+          colors: isDark 
+              ? const [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)] // Sleek Dark
+              : const [Color(0xFFE0EAFC), Color(0xFFCFDEF3), Color(0xFFE0EAFC)], // Sleek Light
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text("Profile & Achievements", style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text("Profile & Achievements", style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          foregroundColor: Colors.white,
+          foregroundColor: textColor,
         ),
         body: ValueListenableBuilder(
           valueListenable: box.listenable(),
@@ -59,14 +62,14 @@ class ProfileScreen extends StatelessWidget {
                           child: const Icon(Icons.person, size: 50, color: Color(0xFF38BDF8)),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           "Habit Champion",
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Best Overall Streak: $bestStreak Days",
-                          style: const TextStyle(fontSize: 16, color: Colors.amberAccent),
+                          style: const TextStyle(fontSize: 16, color: Colors.amber),
                         ),
                       ],
                     ),
@@ -74,9 +77,9 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 40),
 
                   // --- 11.5 BADGES AND ACHIEVEMENTS ---
-                  const Text(
+                  Text(
                     "Achievements",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   const SizedBox(height: 16),
                   GridView.count(
@@ -87,32 +90,77 @@ class ProfileScreen extends StatelessWidget {
                     crossAxisSpacing: 16,
                     childAspectRatio: 1.2,
                     children: [
-                      _buildBadge("Bronze Starter", "3 Day Streak", Icons.local_fire_department, bestStreak >= 3, Colors.orangeAccent),
-                      _buildBadge("Silver Consistent", "7 Day Streak", Icons.shield, bestStreak >= 7, Colors.grey.shade400),
-                      _buildBadge("Gold Dedicated", "30 Day Streak", Icons.emoji_events, bestStreak >= 30, Colors.amber),
-                      _buildBadge("Master", "100 Day Streak", Icons.diamond, bestStreak >= 100, Colors.cyanAccent),
+                      _buildBadge("Bronze Starter", "3 Day Streak", Icons.local_fire_department, bestStreak >= 3, Colors.orangeAccent, isDark),
+                      _buildBadge("Silver Consistent", "7 Day Streak", Icons.shield, bestStreak >= 7, Colors.grey.shade400, isDark),
+                      _buildBadge("Gold Dedicated", "30 Day Streak", Icons.emoji_events, bestStreak >= 30, Colors.amber, isDark),
+                      _buildBadge("Master", "100 Day Streak", Icons.diamond, bestStreak >= 100, Colors.cyan, isDark),
                     ],
                   ),
                   const SizedBox(height: 40),
 
                   // --- 11.6 PROFILE AND SETTINGS ---
-                  const Text(
+                  Text(
                     "Settings",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
                   ),
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: isDark ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(color: isDark ? Colors.white.withOpacity(0.2) : Colors.black12),
                     ),
                     child: Column(
                       children: [
-                        _buildSettingTile(Icons.dark_mode, "Dark Theme", trailing: Switch(value: true, onChanged: (v) {}, activeColor: const Color(0xFF38BDF8))),
-                        const Divider(color: Colors.white24, height: 1),
-                        _buildSettingTile(Icons.notifications, "Notifications", trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16)),
-                        const Divider(color: Colors.white24, height: 1),
+                        // --- DYNAMIC DARK MODE SWITCH ---
+                        ValueListenableBuilder(
+                          valueListenable: Hive.box('settings').listenable(),
+                          builder: (context, settingsBox, _) {
+                            bool isDarkMode = settingsBox.get('isDarkMode', defaultValue: true);
+                            return _buildSettingTile(
+                              Icons.dark_mode, 
+                              "Dark Theme", 
+                              textColor: textColor,
+                              iconColor: isDark ? Colors.white70 : Colors.black54,
+                              trailing: Switch(
+                                value: isDarkMode, 
+                                onChanged: (value) {
+                                  settingsBox.put('isDarkMode', value); 
+                                }, 
+                                activeColor: const Color(0xFF38BDF8),
+                              ),
+                            );
+                          }
+                        ),
+                        Divider(color: isDark ? Colors.white24 : Colors.black12, height: 1),
+                        
+                        // --- DYNAMIC NOTIFICATIONS SWITCH ---
+                        ValueListenableBuilder(
+                          valueListenable: Hive.box('settings').listenable(),
+                          builder: (context, settingsBox, _) {
+                            bool isNotificationsEnabled = settingsBox.get('notificationsEnabled', defaultValue: true);
+                            return _buildSettingTile(
+                              Icons.notifications, 
+                              "Notifications", 
+                              textColor: textColor,
+                              iconColor: isDark ? Colors.white70 : Colors.black54,
+                              trailing: Switch(
+                                value: isNotificationsEnabled, 
+                                onChanged: (value) async {
+                                  settingsBox.put('notificationsEnabled', value); // Save preference
+                                  
+                                  if (value) {
+                                    // FIRE A TEST NOTIFICATION WHEN TURNED ON!
+                                    await NotificationService().showTestNotification();
+                                  }
+                                }, 
+                                activeColor: const Color(0xFF38BDF8),
+                              ),
+                            );
+                          }
+                        ),
+                        
+                        Divider(color: isDark ? Colors.white24 : Colors.black12, height: 1),
                         _buildSettingTile(Icons.logout, "Logout", textColor: Colors.redAccent, iconColor: Colors.redAccent),
                       ],
                     ),
@@ -128,13 +176,18 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // Helper widget for Badges (11.5)
-  Widget _buildBadge(String title, String subtitle, IconData icon, bool isUnlocked, Color badgeColor) {
+  Widget _buildBadge(String title, String subtitle, IconData icon, bool isUnlocked, Color badgeColor, bool isDark) {
+    Color textColor = isDark ? Colors.white : Colors.black87;
     return Container(
       decoration: BoxDecoration(
-        color: isUnlocked ? badgeColor.withOpacity(0.15) : Colors.white.withOpacity(0.05),
+        color: isUnlocked 
+            ? badgeColor.withOpacity(0.15) 
+            : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isUnlocked ? badgeColor.withOpacity(0.5) : Colors.white.withOpacity(0.1),
+          color: isUnlocked 
+              ? badgeColor.withOpacity(0.5) 
+              : (isDark ? Colors.white.withOpacity(0.1) : Colors.black12),
           width: 2,
         ),
       ),
@@ -144,21 +197,21 @@ class ProfileScreen extends StatelessWidget {
           Icon(
             isUnlocked ? icon : Icons.lock_outline,
             size: 40,
-            color: isUnlocked ? badgeColor : Colors.white38,
+            color: isUnlocked ? badgeColor : (isDark ? Colors.white38 : Colors.black38),
           ),
           const SizedBox(height: 8),
           Text(
             title,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: isUnlocked ? Colors.white : Colors.white54,
+              color: isUnlocked ? textColor : (isDark ? Colors.white54 : Colors.black54),
             ),
           ),
           Text(
             subtitle,
             style: TextStyle(
               fontSize: 12,
-              color: isUnlocked ? Colors.white70 : Colors.white38,
+              color: isUnlocked ? (isDark ? Colors.white70 : Colors.black54) : (isDark ? Colors.white38 : Colors.black38),
             ),
           ),
         ],
@@ -169,8 +222,8 @@ class ProfileScreen extends StatelessWidget {
   // Helper widget for Settings List (11.6)
   Widget _buildSettingTile(IconData icon, String title, {Widget? trailing, Color? textColor, Color? iconColor}) {
     return ListTile(
-      leading: Icon(icon, color: iconColor ?? Colors.white70),
-      title: Text(title, style: TextStyle(color: textColor ?? Colors.white, fontWeight: FontWeight.w500)),
+      leading: Icon(icon, color: iconColor),
+      title: Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
       trailing: trailing,
       onTap: () {
         // Handle setting tap

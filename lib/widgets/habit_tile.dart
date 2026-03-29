@@ -34,7 +34,7 @@ class HabitTile extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        // --- GLASSMORPHISM STARTS HERE ---
+        // --- GLASSMORPHISM  ---
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
@@ -71,12 +71,12 @@ class HabitTile extends StatelessWidget {
                     habit.name,
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.w800, // Bolder
-                      color: Colors.white, // White text for contrast
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white, 
                       decoration: isCompleted ? TextDecoration.lineThrough : null,
                       decorationColor: Colors.white70,
                       decorationThickness: 3,
-                      // --- SUBTLE 3D POP FOR LIST ITEMS ---
+                    
                       shadows: const [
                         Shadow(color: Colors.black38, offset: Offset(1.5, 1.5), blurRadius: 0),
                       ],
@@ -105,7 +105,7 @@ class HabitTile extends StatelessWidget {
                   ),
                   value: isCompleted,
                   onChanged: onChanged,
-                  // Use the user's custom color for the checkbox!
+                
                   activeColor: Color(habit.colorValue).withOpacity(0.8),
                   checkColor: Colors.white,
                   checkboxShape: RoundedRectangleBorder(

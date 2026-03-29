@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
-import 'package:fl_chart/fl_chart.dart'; // ADDED FL_CHART
+import 'package:fl_chart/fl_chart.dart'; 
 import '../models/habit.dart';
 
 class StatsScreen extends StatelessWidget {
