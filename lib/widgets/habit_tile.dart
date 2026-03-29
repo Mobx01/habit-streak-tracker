@@ -55,6 +55,18 @@ class HabitTile extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: CheckboxListTile(
+                  // Dynamic Icon fetched from Hive
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(habit.colorValue).withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconData(habit.iconCodePoint, fontFamily: 'MaterialIcons'),
+                      color: Color(habit.colorValue),
+                    ),
+                  ),
                   title: Text(
                     habit.name,
                     style: TextStyle(
@@ -81,10 +93,11 @@ class HabitTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${habit.streak} Day Streak',
+                          '${habit.streak} Day Streak • ${habit.frequency}', // Show frequency here!
                           style: TextStyle(
                             color: habit.streak > 0 ? Colors.amberAccent : Colors.white54,
                             fontWeight: habit.streak > 0 ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -92,11 +105,12 @@ class HabitTile extends StatelessWidget {
                   ),
                   value: isCompleted,
                   onChanged: onChanged,
-                  activeColor: Colors.white.withOpacity(0.4),
+                  // Use the user's custom color for the checkbox!
+                  activeColor: Color(habit.colorValue).withOpacity(0.8),
                   checkColor: Colors.white,
                   checkboxShape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
-                    side: BorderSide(color: Colors.white.withOpacity(0.8)),
+                    side: BorderSide(color: Color(habit.colorValue).withOpacity(0.8)),
                   ),
                   controlAffinity: ListTileControlAffinity.leading,
                 ),

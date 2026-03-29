@@ -63,21 +63,21 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     }
   }
 
-  void _saveHabit() {
+void _saveHabit() {
     if (_formKey.currentState!.validate()) {
       final box = Hive.box<Habit>('habits');
       
-      // Note: To persist the new Pro features (color, icon, time, frequency), 
-      // you will need to add these fields to your Habit model in phase 11.8. 
-      // For now, we save the base model and prepare the UI.
       final newHabit = Habit(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text.trim(),
         createdAt: DateTime.now(),
         completedDays: [],
-        // frequency: _selectedFrequency,
-        // colorValue: _selectedColor.value,
-        // iconCodePoint: _selectedIcon.codePoint,
+        frequency: _selectedFrequency,
+        colorValue: _selectedColor.value,
+        iconCodePoint: _selectedIcon.codePoint,
+        reminderTime: _reminderTime != null 
+            ? '${_reminderTime!.hour}:${_reminderTime!.minute}' 
+            : null,
       );
 
       box.add(newHabit);
